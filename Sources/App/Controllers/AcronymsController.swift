@@ -6,6 +6,9 @@ class AcronymsController: RouteCollection {
         let acronymsRoute = router.grouped("api", "acronyms")
         acronymsRoute.get(use: getAllHandler)
         acronymsRoute.post(use: createHandler)
+        acronymsRoute.get(Acronym.parameter, use: getHandler)
+        acronymsRoute.delete(Acronym.parameter, use: deleteHandler)
+        acronymsRoute.put(Acronym.parameter, use: updateHandler)
     }
     
     func getAllHandler(_ req: Request) throws -> Future<[Acronym]> {
@@ -15,6 +18,26 @@ class AcronymsController: RouteCollection {
     func createHandler(_ req: Request) throws -> Future<Acronym> {
         let acronym = try req.content.decode(Acronym.self)
         return acronym.save(on: req)
+    }
+    
+    func getHandler(_ req: Request) throws -> Future<Acronym> {
+        return try req.parameters.next(Acronym.self)
+    }
+    //^  We make Acronym model conform to Paramter, so that we can have Vapor do haeavy lifting. Otherwise we would be responsible for passing in ID as param and checking for it to work etc.
+    
+    func deleteHandler(_ req: Request) throws -> Future<HTTPStatus> {
+        return try req.parameters.next(Acronym.self).flatMap(to: HTTPStatus.self) { acronym in
+            return acronym.delete(on: req).transform(to: .noContent)
+        }
+    }
+    
+    func updateHandler(_ req: Request) throws -> Future<Acronym> {
+        return try flatMap(to: Acronym.self, req.parameters.next(Acronym.self), req.content.decode(Acronym.self)) { acronym, updatedAcronym in
+            acronym.short = updatedAcronym.short
+            acronym.long = updatedAcronym.long
+            return acronym.save(on: req)
+        
+        }
     }
     
 }
