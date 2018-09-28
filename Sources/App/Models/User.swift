@@ -16,3 +16,9 @@ extension User: SQLiteUUIDModel {}
 extension User: Migration {}
 extension User: Content {}
 extension User: Parameter {}
+
+extension User {
+    var acronyms: Children<User, Acronym> {
+        return children(\.creatorID)
+    }
+}
