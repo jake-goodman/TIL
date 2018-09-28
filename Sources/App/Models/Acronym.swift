@@ -23,12 +23,8 @@ extension Acronym {
     var creator: Parent<Acronym, User> {
         return parent(\.creatorID)
     }
+    
+    var categories: Siblings<Acronym, Category, AcronymsCategoryPivot> {
+        return siblings()
+    }
 }
-
-/* SQLiteModel has these helpers implemented already
-extension Acronym: Model {
-    typealias Database = SQLiteDatabase
-    typealias ID = Int
-    static let idKey: IDKey = \Acronym.id
-}
-*/
