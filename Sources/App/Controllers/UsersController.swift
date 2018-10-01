@@ -1,4 +1,5 @@
 import Vapor
+import Crypto
 
 class UsersController: RouteCollection {
     func boot(router: Router) throws {
@@ -6,24 +7,27 @@ class UsersController: RouteCollection {
         
         usersRoute.post(use: createHandler)
         usersRoute.get(use: getAllHandler)
-        usersRoute.get(User.parameter, use: getHandler)
+        usersRoute.get(User.Public.parameter, use: getHandler)
         usersRoute.get(User.parameter, "acronyms", use: getAcronymsHandler)
     }
     
     // Create
     func createHandler(_ req: Request) throws -> Future<User> {
-        let user = try req.content.decode(User.self)
-        return user.save(on: req)
+        return try req.content.decode(User.self).flatMap(to: User.self) { user in
+            let hasher = try req.make(BCryptDigest.self)
+            user.password = try hasher.hash(user.password)
+            return user.save(on: req)
+        }
     }
     
     // Get all
-    func getAllHandler(_ req: Request) throws -> Future<[User]> {
-        return User.query(on: req).all()
+    func getAllHandler(_ req: Request) throws -> Future<[User.Public]> {
+        return User.Public.query(on: req).all()
     }
     
     // Get
-    func getHandler(_ req: Request) throws -> Future<User> {
-        return try req.parameters.next(User.self)
+    func getHandler(_ req: Request) throws -> Future<User.Public> {
+        return try req.parameters.next(User.Public.self)
     }
     
     func getAcronymsHandler(_ req: Request) throws -> Future<[Acronym]> {
