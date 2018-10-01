@@ -1,14 +1,19 @@
 import Vapor
 import Crypto
+import Authentication
 
 class UsersController: RouteCollection {
     func boot(router: Router) throws {
-        let usersRoute = router.grouped("api", "users")
+        let usersRoutes = router.grouped("api", "users")
         
-        usersRoute.post(use: createHandler)
-        usersRoute.get(use: getAllHandler)
-        usersRoute.get(User.Public.parameter, use: getHandler)
-        usersRoute.get(User.parameter, "acronyms", use: getAcronymsHandler)
+        usersRoutes.post(use: createHandler)
+        usersRoutes.get(use: getAllHandler)
+        usersRoutes.get(User.Public.parameter, use: getHandler)
+        usersRoutes.get(User.parameter, "acronyms", use: getAcronymsHandler)
+        
+        let basicAuthMiddleware = User.basicAuthMiddleware(using: BCryptDigest())
+        let basicAuthGroup = usersRoutes.grouped(basicAuthMiddleware)
+        basicAuthGroup.post("login", use: loginHandler)
     }
     
     // Create
@@ -35,4 +40,11 @@ class UsersController: RouteCollection {
             return try user.acronyms.query(on: req).all()
         }
     }
+    
+    func loginHandler(_ req: Request) throws -> Future<Token> {
+        let user = try req.requireAuthenticated(User.self)
+        let token = try Token.generate(for: user)
+        return token.save(on: req)
+    }
+    
 }
