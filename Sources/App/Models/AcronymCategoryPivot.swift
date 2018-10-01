@@ -1,8 +1,8 @@
 import Vapor
 import Foundation
-import FluentSQLite
+import FluentPostgreSQL
 
-final class AcronymsCategoryPivot: SQLiteUUIDPivot {
+final class AcronymsCategoryPivot: PostgreSQLUUIDPivot {
     var id: UUID?
     var acronymID: Acronym.ID
     var categoryID: Category.ID
@@ -11,7 +11,8 @@ final class AcronymsCategoryPivot: SQLiteUUIDPivot {
     typealias Right = Category
     
     static let leftIDKey: LeftIDKey = \AcronymsCategoryPivot.acronymID
-    static let rightIDKey: RightIDKey = \AcronymsCategoryPivot.categoryID
+    static let rightIDKey
+        : RightIDKey = \AcronymsCategoryPivot.categoryID
     
     init(_ acronymID: Acronym.ID, _ categoryID: Category.ID) {
         self.acronymID = acronymID

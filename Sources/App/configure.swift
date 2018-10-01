@@ -1,10 +1,10 @@
-import FluentSQLite
+import FluentPostgreSQL
 import Vapor
 
 /// Called before your application initializes.
 public func configure(_ config: inout Config, _ env: inout Environment, _ services: inout Services) throws {
     /// Register providers first
-    try services.register(FluentSQLiteProvider())
+    try services.register(FluentPostgreSQLProvider())
     
     /// Register routes to the router
     let router = EngineRouter.default()
@@ -17,20 +17,21 @@ public func configure(_ config: inout Config, _ env: inout Environment, _ servic
     middlewares.use(ErrorMiddleware.self) // Catches errors and converts to HTTP response
     services.register(middlewares)
     
-    // Configure a SQLite database
-    let sqlite = try SQLiteDatabase(storage: .memory)
+    // Configure a PostgreSQL database
+    let config = PostgreSQLDatabaseConfig(hostname: "localhost", port: 5432, username: "Jake", database: "aeosdev", password: nil, transport: .cleartext)
+    let postgres = PostgreSQLDatabase(config: config)
     
-    /// Register the configured SQLite database to the database config.
+    /// Register the configured PostgreSQL database to the database config.
     var databases = DatabasesConfig()
-    databases.add(database: sqlite, as: .sqlite)
+    databases.add(database: postgres, as: .psql)
     services.register(databases)
     
     /// Configure migrations
     var migrations = MigrationConfig()
-    migrations.add(model: Acronym.self, database: .sqlite)
-    migrations.add(model: User.self, database: .sqlite)
-    migrations.add(model: Category.self, database: .sqlite)
-    migrations.add(model: AcronymsCategoryPivot.self, database: .sqlite)
+    migrations.add(model: Acronym.self, database: .psql)
+    migrations.add(model: User.self, database: .psql)
+    migrations.add(model: Category.self, database: .psql)
+    migrations.add(model: AcronymsCategoryPivot.self, database: .psql)
     
     services.register(migrations)
     

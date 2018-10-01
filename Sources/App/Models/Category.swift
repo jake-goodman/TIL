@@ -1,5 +1,5 @@
-import FluentSQLite
 import Vapor
+import FluentPostgreSQL
 
 final class Category: Codable {
     var id: Int?
@@ -10,7 +10,7 @@ final class Category: Codable {
     }
 }
 
-extension Category: SQLiteModel {}
+extension Category: PostgreSQLModel {}
 extension Category: Content {}
 extension Category: Migration {}
 extension Category: Parameter {}
